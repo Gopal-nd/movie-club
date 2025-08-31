@@ -1,17 +1,38 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres
+  postgres:
+    image: postgres:15-alpine
+    container_name: movie_club_db
     environment:
+      POSTGRES_DB: movie_club
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./server/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - movie_club_network
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: movie_club_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@movieclub.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - movie_club_network
 
 volumes:
   postgres_data:
-    driver: local
+
+networks:
+  movie_club_network:
+    driver: bridge

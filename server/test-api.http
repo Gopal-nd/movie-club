@@ -1,0 +1,66 @@
+### Health Check
+GET http://localhost:3001/health
+
+### User Registration
+POST http://localhost:3001/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "username": "testuser",
+  "password": "password123"
+}
+
+### User Login
+POST http://localhost:3001/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Get User Profile (replace TOKEN with actual token)
+GET http://localhost:3001/api/auth/profile
+Authorization: Bearer TOKEN
+
+### Search Movies
+GET http://localhost:3001/api/movies/search?query=inception&page=1
+
+### Get Popular Movies
+GET http://localhost:3001/api/movies/popular?page=1
+
+### Get Top Rated Movies
+GET http://localhost:3001/api/movies/top-rated?page=1
+
+### Get Movie Genres
+GET http://localhost:3001/api/movies/genres
+
+### Get Movie Details (replace MOVIE_ID with actual TMDB movie ID)
+GET http://localhost:3001/api/movies/550
+
+### Create Review (replace TOKEN and MOVIE_ID)
+POST http://localhost:3001/api/reviews/550
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "rating": 9,
+  "text": "Amazing movie! One of my favorites."
+}
+
+### Get User Reviews (replace TOKEN)
+GET http://localhost:3001/api/reviews/user
+Authorization: Bearer TOKEN
+
+### Add to Watchlist (replace TOKEN and MOVIE_ID)
+POST http://localhost:3001/api/watchlist/550
+Authorization: Bearer TOKEN
+
+### Get User Watchlist (replace TOKEN)
+GET http://localhost:3001/api/watchlist
+Authorization: Bearer TOKEN
+
+### Check Watchlist Status (replace TOKEN and MOVIE_ID)
+GET http://localhost:3001/api/watchlist/550/status
+Authorization: Bearer TOKEN
