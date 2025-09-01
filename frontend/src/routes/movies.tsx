@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../store'
 import { moviesAPI } from '../services/api'
@@ -13,6 +13,20 @@ export const Route = createFileRoute('/movies')({
 })
 
 function MoviesPage() {
+  // Check if we're on a child route (movie detail page)
+  const matches = useMatches()
+  const isOnChildRoute = matches.some(match => match.routeId.includes('$movieId'))
+
+  // If we're on a child route, only render the outlet
+  if (isOnChildRoute) {
+    return <Outlet />
+  }
+
+  // Otherwise, render the movies list
+  return <MoviesListPage />
+}
+
+function MoviesListPage() {
   const { movies, setMovies, filters: globalFilters } = useAppStore()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -97,7 +97,7 @@ export default function MovieCard({ movie, showWatchlistButton = true, className
       <Link
         to="/movies/$movieId"
         params={{ movieId: movie.id.toString() }}
-        className="absolute inset-0 z-10"
+        className="absolute inset-0 z-10 cursor-pointer"
         aria-label={`View details for ${movie.title}`}
       />
     </div>

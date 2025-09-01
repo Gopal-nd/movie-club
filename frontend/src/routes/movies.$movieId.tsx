@@ -1,3 +1,4 @@
+// File: /movies/$movieId.tsx
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../store'
@@ -8,13 +9,21 @@ import Button from '../components/ui/Button'
 import { Heart, Play, Star, Clock, Calendar, Users, MessageCircle, Plus } from 'lucide-react'
 import type { Movie, Review, Cast } from '../types'
 
-export const Route = createFileRoute('/movies/$movieId' as any)({
+// Fix 1: Remove the type assertion and use proper route definition
+export const Route = createFileRoute('/movies/$movieId')({
   component: MovieDetailPage,
-  validateSearch: (search: Record<string, unknown>) => ({}),
+  // Fix 2: Add proper parameter validation
+  validateSearch: (search: Record<string, unknown>) => search,
+  // Fix 3: Optional - add loader for better data fetching
+  // loader: async ({ params }) => {
+  //   const movieId = parseInt(params.movieId)
+  //   return await moviesAPI.getMovie(movieId)
+  // }
 })
 
 function MovieDetailPage() {
-  const { params } = Route.useParams()
+  // Fix 4: Use the proper hook for getting params
+  const { movieId } = Route.useParams()
   const { user, isAuthenticated, isInWatchlist, addToWatchlist, removeFromWatchlist } = useAppStore()
   
   const [movie, setMovie] = useState<Movie | null>(null)
@@ -26,16 +35,20 @@ function MovieDetailPage() {
   const [userReview, setUserReview] = useState<Review | null>(null)
 
   useEffect(() => {
-    fetchMovieDetails()
-    fetchReviews()
-    fetchCast()
-  }, [params.movieId])
+    // Fix 5: Add proper dependency and error handling
+    if (movieId) {
+      fetchMovieDetails()
+      fetchReviews()
+      fetchCast()
+    }
+  }, [movieId])
 
   const fetchMovieDetails = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      const movieData = await moviesAPI.getMovie(parseInt(params.movieId))
+      // Fix 6: Use movieId directly from params
+      const movieData = await moviesAPI.getMovie(parseInt(movieId))
       setMovie(movieData)
     } catch (err) {
       setError('Failed to load movie details. Please try again later.')
@@ -47,7 +60,7 @@ function MovieDetailPage() {
 
   const fetchReviews = async () => {
     try {
-      const reviewsData = await reviewsAPI.getMovieReviews(parseInt(params.movieId))
+      const reviewsData = await reviewsAPI.getMovieReviews(parseInt(movieId))
       setReviews(reviewsData.data)
       
       // Check if user has already reviewed this movie
