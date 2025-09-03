@@ -263,3 +263,8 @@ function MoviesListPage() {
     </div>
   )
 }
+
+
+
+
+

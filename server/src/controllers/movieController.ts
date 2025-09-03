@@ -1,191 +1,232 @@
-import type { Request, Response } from 'express';
-import { prisma } from '../config/database';
-import { tmdbApi } from '../config/tmdb';
+import type { Request, Response } from "express";
+import { prisma } from "../config/database";
+import fs from "fs/promises";
+import {
+  fetchFromTMDB,
+  TMDB_IMAGE_BASE_URL,
+  type Movie,
+  type TMDBGenresResponse,
+  type TMDBMovie,
+  type TMDBMovieDetails,
+  type TMDBResponse,
+} from "../config/tmdb";
 
-export const searchMovies = async (req: Request, res: Response) => {
+export const featuredMovies = async (req: Request, res: Response) => {
   try {
-    const { query, page = 1 } = req.query;
-    
-    if (!query || typeof query !== 'string') {
-      return res.status(400).json({ error: 'Query parameter is required' });
-    }
-
-    // Search TMDB API
-    const tmdbResults = await tmdbApi.searchMovies(query as string, page as number);
-    
-    // Transform TMDB results to match our schema
-    const movies = tmdbResults.results.map((movie: any) => ({
-      id: movie.id.toString(),
-      title: movie.title,
-      genres: movie.genre_ids || [],
-      releaseYear: new Date(movie.release_date).getFullYear(),
-      synopsis: movie.overview,
-      posterUrl: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
-      averageRating: movie.vote_average || 0,
-      ratingsCount: movie.vote_count || 0,
-    }));
-
-    res.json({
-      movies,
-      totalPages: tmdbResults.total_pages,
-      totalResults: tmdbResults.total_results,
-      currentPage: page
+    const data = await fetchFromTMDB<TMDBResponse>("/movie/popular", {
+      page: "1",
     });
+    const movies = data.results.slice(0, 6).map((movie: TMDBMovie) => ({
+      id: movie.id,
+      title: movie.title,
+      overview: movie.overview,
+      poster_path: movie.poster_path
+        ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}`
+        : null,
+      release_date: movie.release_date,
+      vote_average: movie.vote_average,
+      genre_ids: movie.genre_ids,
+    }));
+    res.json(movies);
   } catch (error) {
-    console.error('Search movies error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching featured movies:", error);
+    res.status(500).json({ error: "Failed to fetch featured movies" });
   }
 };
 
-export const getMovieDetails = async (req: Request, res: Response) => {
+export const trendingMovies = async (req, res) => {
   try {
-    const { movieId } = req.params;
-
-    // Get movie details from TMDB
-    const tmdbMovie = await tmdbApi.getMovieDetails(movieId);
-    
-    // Check if movie exists in our database
-    let localMovie = await prisma.movie.findUnique({
-      where: { id: movieId },
-      include: {
-        reviews: {
-          include: {
-            user: {
-              select: { username: true, profilePicture: true }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
-        },
-        _count: {
-          select: { reviews: true, watchlistedBy: true }
-        }
-      }
+    const data = await fetchFromTMDB<TMDBResponse>("/trending/movie/week", {
+      page: "1",
     });
+    const movies = data.results.slice(0, 6).map((movie: TMDBMovie) => ({
+      id: movie.id,
+      title: movie.title,
+      overview: movie.overview,
+      poster_path: movie.poster_path
+        ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}`
+        : null,
+      release_date: movie.release_date,
+      vote_average: movie.vote_average,
+      genre_ids: movie.genre_ids,
+    }));
+    res.json(movies);
+  } catch (error) {
+    console.error("Error fetching trending movies:", error);
+    res.status(500).json({ error: "Failed to fetch trending movies" });
+  }
+};
 
-    // If movie doesn't exist locally, create it
-    if (!localMovie) {
-      const movieData = {
-        id: tmdbMovie.id.toString(),
-        title: tmdbMovie.title,
-        genres: tmdbMovie.genres?.map((g: any) => g.name) || [],
-        releaseYear: new Date(tmdbMovie.release_date).getFullYear(),
-        director: tmdbMovie.credits?.crew?.find((c: any) => c.job === 'Director')?.name,
-        cast: tmdbMovie.credits?.cast?.slice(0, 10).map((c: any) => ({
-          name: c.name,
-          role: c.character
-        })) || [],
-        synopsis: tmdbMovie.overview,
-        posterUrl: tmdbMovie.poster_path ? `https://image.tmdb.org/t/p/w500${tmdbMovie.poster_path}` : null,
-        trailers: tmdbMovie.videos?.results?.filter((v: any) => v.type === 'Trailer').map((v: any) => v.key) || [],
-        averageRating: tmdbMovie.vote_average || 0,
-        ratingsCount: tmdbMovie.vote_count || 0,
-      };
+export const moviesList = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      genre,
+      year,
+      rating,
+      sortBy,
+      search,
+    } = req.query;
 
-      localMovie = await prisma.movie.create({
-        data: movieData,
-        include: {
-          reviews: {
-            include: {
-              user: {
-                select: { username: true, profilePicture: true }
-              }
-            },
-            orderBy: { createdAt: 'desc' }
-          },
-          _count: {
-            select: { reviews: true, watchlistedBy: true }
-          }
-        }
-      });
-    }
-
-    // Add TMDB specific data
-    const movieWithTMDB = {
-      ...localMovie,
-      tmdb: {
-        backdropUrl: tmdbMovie.backdrop_path ? `https://image.tmdb.org/t/p/original${tmdbMovie.backdrop_path}` : null,
-        runtime: tmdbMovie.runtime,
-        budget: tmdbMovie.budget,
-        revenue: tmdbMovie.revenue,
-        status: tmdbMovie.status,
-        originalLanguage: tmdbMovie.original_language,
-        productionCompanies: tmdbMovie.production_companies,
-        videos: tmdbMovie.videos?.results || [],
-        images: tmdbMovie.images || {},
-      }
+    let endpoint = "/discover/movie";
+    let params: Record<string, string> = {
+      page: page.toString(),
+      sort_by: "popularity.desc",
     };
 
-    res.json({ movie: movieWithTMDB });
-  } catch (error) {
-    console.error('Get movie details error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+    // Apply genre filter
+    if (genre) {
+      params.with_genres = genre.toString();
+    }
 
-export const getPopularMovies = async (req: Request, res: Response) => {
-  try {
-    const { page = 1 } = req.query;
+    // Apply year filter
+    if (year) {
+      params.primary_release_year = year.toString();
+    }
 
-    const tmdbResults = await tmdbApi.getPopularMovies(page as number);
-    
-    const movies = tmdbResults.results.map((movie: any) => ({
-      id: movie.id.toString(),
+    // Apply rating filter
+    if (rating) {
+      params["vote_average.gte"] = rating.toString();
+    }
+
+    // Apply sorting
+    if (sortBy) {
+      switch (sortBy) {
+        case "title":
+          params.sort_by = "title.asc";
+          break;
+        case "rating":
+          params.sort_by = "vote_average.desc";
+          break;
+        case "release_date":
+          params.sort_by = "primary_release_date.desc";
+          break;
+        default:
+          params.sort_by = "popularity.desc";
+      }
+    }
+
+    // If search query is provided, use search endpoint instead
+    if (search) {
+      endpoint = "/search/movie";
+      params.query = search?.toString();
+      delete params.with_genres;
+      delete params.primary_release_year;
+      delete params["vote_average.gte"];
+      delete params.sort_by;
+    }
+
+    const data = await fetchFromTMDB<TMDBResponse>(endpoint, params);
+
+    const movies = data.results.map((movie: TMDBMovie) => ({
+      id: movie.id,
       title: movie.title,
-      genres: movie.genre_ids || [],
-      releaseYear: new Date(movie.release_date).getFullYear(),
-      synopsis: movie.overview,
-      posterUrl: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
-      averageRating: movie.vote_average || 0,
-      ratingsCount: movie.vote_count || 0,
+      overview: movie.overview,
+      poster_path: movie.poster_path
+        ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}`
+        : null,
+      release_date: movie.release_date,
+      vote_average: movie.vote_average,
+      genre_ids: movie.genre_ids,
     }));
 
     res.json({
-      movies,
-      totalPages: tmdbResults.total_pages,
-      totalResults: tmdbResults.total_results,
-      currentPage: page
+      data: movies,
+      pagination: {
+        page: parseInt(page.toString()),
+        limit: parseInt(limit.toString()),
+        total: data.total_results,
+        totalPages: data.total_pages,
+      },
     });
   } catch (error) {
-    console.error('Get popular movies error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching movies:", error);
+    res.status(500).json({ error: "Failed to fetch movies" });
   }
 };
 
-export const getTopRatedMovies = async (req: Request, res: Response) => {
+export const moviesSearch = async (req, res) => {
   try {
-    const { page = 1 } = req.query;
+    const { q: query, page = 1, limit = 20 } = req.query;
 
-    const tmdbResults = await tmdbApi.getTopRatedMovies(page as number);
-    
-    const movies = tmdbResults.results.map((movie: any) => ({
-      id: movie.id.toString(),
+    if (!query) {
+      return res.status(400).json({ error: "Query parameter required" });
+    }
+
+    const data = await fetchFromTMDB<TMDBResponse>("/search/movie", {
+      query: query.toString(),
+      page: page.toString(),
+    });
+
+    data.results.map(async (movie: TMDBMovie) => {
+      await fetchFromTMDB<TMDBMovie>(`/movie/${movie.id}`);
+    });
+    const movies = data.results.map((movie: TMDBMovie) => ({
+      id: movie.id,
       title: movie.title,
-      genres: movie.genre_ids || [],
-      releaseYear: new Date(movie.release_date).getFullYear(),
-      synopsis: movie.overview,
-      posterUrl: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
-      averageRating: movie.vote_average || 0,
-      ratingsCount: movie.vote_count || 0,
+      overview: movie.overview,
+      poster_path: movie.poster_path
+        ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}`
+        : null,
+      release_date: movie.release_date,
+      vote_average: movie.vote_average,
+      genre_ids: movie.genre_ids,
     }));
 
     res.json({
-      movies,
-      totalPages: tmdbResults.total_pages,
-      totalResults: tmdbResults.total_results,
-      currentPage: page
+      data: movies,
+      pagination: {
+        page: parseInt(page.toString()),
+        limit: parseInt(limit.toString()),
+        total: data.total_results,
+        totalPages: data.total_pages,
+      },
     });
   } catch (error) {
-    console.error('Get top rated movies error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error searching movies:", error);
+    res.status(500).json({ error: "Failed to search movies" });
   }
 };
 
-export const getMovieGenres = async (req: Request, res: Response) => {
+export const moviesGenres = async (req: Request, res: Response) => {
   try {
-    const genres = await tmdbApi.getMovieGenres();
-    res.json({ genres: genres.genres });
+    const data = await fetchFromTMDB<TMDBGenresResponse>("/genre/movie/list");
+    res.json(data.genres);
   } catch (error) {
-    console.error('Get genres error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching genres:", error);
+    res.status(500).json({ error: "Failed to fetch genres" });
+  }
+};
+
+// Generic movie route - using TMDB movie details
+export const getMovieDetails = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const raw = await fetchFromTMDB<Movie>(`/movie/${id}`, {
+      append_to_response: "credits,videos,images",
+    });
+
+    const movie = {
+      id: raw.id,
+      title: raw.title,
+      overview: raw.overview,
+      poster_path: raw.poster_path
+        ? `${TMDB_IMAGE_BASE_URL}${raw.poster_path}`
+        : null,
+      backdrop_path: raw.backdrop_path
+        ? `https://image.tmdb.org/t/p/original${raw.backdrop_path}`
+        : null,
+      release_date: raw.release_date,
+      vote_average: raw.vote_average,
+      vote_count: raw.vote_count,
+      runtime: raw.runtime,
+      genres: raw.genres,
+    };
+
+    res.json(movie);
+  } catch (error) {
+    console.error("Error fetching movie details:", error);
+    res.status(500).json({ error: "Failed to fetch movie details" });
   }
 };

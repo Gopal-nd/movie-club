@@ -3,10 +3,18 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../store'
 import { moviesAPI, reviewsAPI, tmdbAPI } from '../services/api'
-import MovieCard from '../components/MovieCard'
 import StarRating from '../components/StarRating'
 import Button from '../components/ui/Button'
-import { Heart, Play, Star, Clock, Calendar, Users, MessageCircle, Plus } from 'lucide-react'
+import {
+  Heart,
+  Play,
+  Star,
+  Clock,
+  Calendar,
+  Users,
+  MessageCircle,
+  Plus,
+} from 'lucide-react'
 import type { Movie, Review, Cast } from '../types'
 
 // Fix 1: Remove the type assertion and use proper route definition
@@ -24,8 +32,14 @@ export const Route = createFileRoute('/movies/$movieId')({
 function MovieDetailPage() {
   // Fix 4: Use the proper hook for getting params
   const { movieId } = Route.useParams()
-  const { user, isAuthenticated, isInWatchlist, addToWatchlist, removeFromWatchlist } = useAppStore()
-  
+  const {
+    user,
+    isAuthenticated,
+    isInWatchlist,
+    addToWatchlist,
+    removeFromWatchlist,
+  } = useAppStore()
+
   const [movie, setMovie] = useState<Movie | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [cast, setCast] = useState<Cast[]>([])
@@ -62,10 +76,12 @@ function MovieDetailPage() {
     try {
       const reviewsData = await reviewsAPI.getMovieReviews(parseInt(movieId))
       setReviews(reviewsData.data)
-      
+
       // Check if user has already reviewed this movie
       if (isAuthenticated && user) {
-        const existingReview = reviewsData.data.find(review => review.userId === user.id)
+        const existingReview = reviewsData.data.find(
+          (review) => review.userId === user.id,
+        )
         if (existingReview) {
           setUserReview(existingReview)
         }
@@ -74,6 +90,7 @@ function MovieDetailPage() {
       console.error('Error fetching reviews:', err)
     }
   }
+  console.log(reviews)
 
   const fetchCast = async () => {
     try {
@@ -110,9 +127,13 @@ function MovieDetailPage() {
         setUserReview({ ...userReview, rating, comment })
       } else {
         // Create new review
-        const newReview = await reviewsAPI.createReview(movie.id, rating, comment)
+        const newReview = await reviewsAPI.createReview(
+          movie.id,
+          rating,
+          comment,
+        )
         setUserReview(newReview)
-        setReviews(prev => [newReview, ...prev])
+        setReviews((prev) => [newReview, ...prev])
       }
       setShowReviewForm(false)
     } catch (err) {
@@ -138,9 +159,7 @@ function MovieDetailPage() {
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
           <p className="text-gray-600 mb-4">{error || 'Movie not found'}</p>
-          <Button onClick={() => window.history.back()}>
-            Go Back
-          </Button>
+          <Button onClick={() => window.history.back()}>Go Back</Button>
         </div>
       </div>
     )
@@ -158,7 +177,7 @@ function MovieDetailPage() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-        
+
         {/* Movie Info Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <div className="max-w-7xl mx-auto">
@@ -171,28 +190,34 @@ function MovieDetailPage() {
                   className="w-48 h-72 rounded-lg shadow-2xl"
                 />
               </div>
-              
+
               {/* Movie Details */}
               <div className="flex-1">
-                <h1 className="text-4xl lg:text-6xl font-bold mb-4">{movie.title}</h1>
+                <h1 className="text-4xl lg:text-6xl font-bold mb-4">
+                  {movie.title}
+                </h1>
                 {movie.tagline && (
-                  <p className="text-xl text-gray-300 mb-4 italic">"{movie.tagline}"</p>
+                  <p className="text-xl text-gray-300 mb-4 italic">
+                    "{movie.tagline}"
+                  </p>
                 )}
-                
+
                 <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
                   <div className="flex items-center gap-2">
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                     <span>{movie.vote_average.toFixed(1)}</span>
-                    <span className="text-gray-300">({movie.vote_count.toLocaleString()} votes)</span>
+                    <span className="text-gray-300">
+                      ({movie.vote_count.toLocaleString()} votes)
+                    </span>
                   </div>
-                  
+
                   {movie.release_date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(movie.release_date).getFullYear()}</span>
                     </div>
                   )}
-                  
+
                   {movie.runtime && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
@@ -221,7 +246,7 @@ function MovieDetailPage() {
                     <Play className="w-5 h-5 mr-2" />
                     Watch Trailer
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="lg"
@@ -230,7 +255,9 @@ function MovieDetailPage() {
                       inWatchlist ? 'bg-white text-gray-900' : ''
                     }`}
                   >
-                    <Heart className={`w-5 h-5 mr-2 ${inWatchlist ? 'fill-current' : ''}`} />
+                    <Heart
+                      className={`w-5 h-5 mr-2 ${inWatchlist ? 'fill-current' : ''}`}
+                    />
                     {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
                   </Button>
                 </div>
@@ -261,7 +288,9 @@ function MovieDetailPage() {
                     alt={member.name}
                     className="w-20 h-20 rounded-full object-cover mx-auto mb-2"
                   />
-                  <p className="font-medium text-sm text-gray-900">{member.name}</p>
+                  <p className="font-medium text-sm text-gray-900">
+                    {member.name}
+                  </p>
                   <p className="text-xs text-gray-600">{member.character}</p>
                 </div>
               ))}
@@ -284,7 +313,9 @@ function MovieDetailPage() {
           {/* Review Form */}
           {showReviewForm && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Write Your Review</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Write Your Review
+              </h3>
               <ReviewForm
                 onSubmit={handleReviewSubmit}
                 onCancel={() => setShowReviewForm(false)}
@@ -321,9 +352,12 @@ function MovieDetailPage() {
           {reviews.length > 0 ? (
             <div className="space-y-4">
               {reviews
-                .filter(review => !userReview || review.id !== userReview.id)
+                .filter((review) => !userReview || review.id !== userReview.id)
                 .map((review) => (
-                  <div key={review.id} className="bg-white rounded-lg shadow-md p-4">
+                  <div
+                    key={review.id}
+                    className="bg-white rounded-lg shadow-md p-4"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
@@ -354,7 +388,9 @@ function MovieDetailPage() {
 
         {/* Similar Movies Section */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Similar Movies</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Similar Movies
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {/* This would be populated with similar movies from your API */}
             <div className="text-center py-8 text-gray-500">
@@ -375,7 +411,12 @@ interface ReviewFormProps {
   initialComment: string
 }
 
-function ReviewForm({ onSubmit, onCancel, initialRating, initialComment }: ReviewFormProps) {
+function ReviewForm({
+  onSubmit,
+  onCancel,
+  initialRating,
+  initialComment,
+}: ReviewFormProps) {
   const [rating, setRating] = useState(initialRating)
   const [comment, setComment] = useState(initialComment)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -398,13 +439,9 @@ function ReviewForm({ onSubmit, onCancel, initialRating, initialComment }: Revie
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Rating
         </label>
-        <StarRating
-          rating={rating}
-          onRatingChange={setRating}
-          size="lg"
-        />
+        <StarRating rating={rating} onRatingChange={setRating} size="lg" />
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Comment
@@ -418,9 +455,13 @@ function ReviewForm({ onSubmit, onCancel, initialRating, initialComment }: Revie
           required
         />
       </div>
-      
+
       <div className="flex gap-3">
-        <Button type="submit" disabled={rating === 0 || isSubmitting} isLoading={isSubmitting}>
+        <Button
+          type="submit"
+          disabled={rating === 0 || isSubmitting}
+          isLoading={isSubmitting}
+        >
           Submit Review
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>

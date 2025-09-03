@@ -1,5 +1,5 @@
-import type{ Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import type { Request, Response, NextFunction } from "express";
+import { z } from "zod";
 
 export const validateRequest = (schema: z.ZodSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -13,8 +13,8 @@ export const validateRequest = (schema: z.ZodSchema) => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
-          error: 'Validation failed',
-          details: error.errors,
+          error: "Validation failed",
+          details: error.message,
         });
       }
       next(error);
@@ -44,7 +44,10 @@ export const movieSchemas = {
   search: z.object({
     query: z.object({
       query: z.string().min(1),
-      page: z.string().optional().transform(val => parseInt(val || '1')),
+      page: z
+        .string()
+        .optional()
+        .transform((val) => parseInt(val || "1")),
     }),
   }),
 

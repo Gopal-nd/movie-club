@@ -11,8 +11,17 @@ interface MovieCardProps {
   className?: string
 }
 
-export default function MovieCard({ movie, showWatchlistButton = true, className = '' }: MovieCardProps) {
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist, isAuthenticated } = useAppStore()
+export default function MovieCard({
+  movie,
+  showWatchlistButton = true,
+  className = '',
+}: MovieCardProps) {
+  const {
+    isInWatchlist,
+    addToWatchlist,
+    removeFromWatchlist,
+    isAuthenticated,
+  } = useAppStore()
   const inWatchlist = isInWatchlist(movie.id)
 
   const handleWatchlistToggle = () => {
@@ -29,7 +38,9 @@ export default function MovieCard({ movie, showWatchlistButton = true, className
   }
 
   return (
-    <div className={`group relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 ${className}`}>
+    <div
+      className={`group relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 ${className}`}
+    >
       {/* Movie Poster */}
       <div className="relative aspect-[2/3] overflow-hidden">
         <img
@@ -41,11 +52,11 @@ export default function MovieCard({ movie, showWatchlistButton = true, className
             target.src = '/placeholder-movie.jpg'
           }}
         />
-        
+
         {/* Overlay with rating */}
         <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-          {movie.vote_average.toFixed(1)}
+          {movie?.vote_average}
         </div>
 
         {/* Watchlist Button */}
@@ -68,12 +79,12 @@ export default function MovieCard({ movie, showWatchlistButton = true, className
         <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
           {movie.title}
         </h3>
-        
+
         <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
           <span>{new Date(movie.release_date).getFullYear()}</span>
           {/* <span>{movie.vote_count.toLocaleString()} votes</span> */}
         </div>
-        
+
         <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
           {movie.overview}
         </p>
@@ -96,7 +107,7 @@ export default function MovieCard({ movie, showWatchlistButton = true, className
       {/* Link overlay for navigation */}
       <Link
         to="/movies/$movieId"
-        params={{ movieId: movie.id.toString() }}
+        params={{ movieId: movie?.id?.toString() }}
         className="absolute inset-0 z-10 cursor-pointer"
         aria-label={`View details for ${movie.title}`}
       />

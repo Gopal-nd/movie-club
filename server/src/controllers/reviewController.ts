@@ -1,11 +1,14 @@
-import { Response } from 'express';
-import { prisma } from '../config/database';
-import { AuthRequest } from '../middleware/auth';
+import type { Response } from "express";
+import { prisma } from "../config/database";
+import { AuthRequest } from "../middleware/auth";
 
 export const createReview = async (req: AuthRequest, res: Response) => {
   try {
-    const { movieId } = req.params;
-    const { rating, text } = req.body;
+    let { rating, text, movieId } = req.body;
+    movieId = String(movieId);
+    if (!movieId) {
+      return res.status(400).json({ error: "Movie ID is required" });
+    }
     const userId = req.user!.id;
 
     // Check if user has already reviewed this movie
@@ -13,43 +16,84 @@ export const createReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId
-        }
-      }
+          movieId,
+        },
+      },
     });
 
     if (existingReview) {
-      return res.status(400).json({ error: 'You have already reviewed this movie' });
+      return res
+        .status(400)
+        .json({ error: "You have already reviewed this movie" });
     }
 
-    // Create review
-    const review = await prisma.review.create({
+    const newMovie = await prisma.review.create({
       data: {
         userId,
         movieId,
         rating,
-        text
+        text,
       },
       include: {
         user: {
           select: {
             username: true,
-            profilePicture: true
-          }
-        }
-      }
+            profilePicture: true,
+          },
+        },
+      },
     });
-
+    let movie = await prisma.movie.findUnique({
+      where: {
+        id: movieId,
+      },
+    });
+    if (!movie) {
+      movie = await prisma.movie.create({
+        data: {
+          id: movieId,
+        },
+      });
+    }
+    const review = await prisma.review.create({
+      data: {
+        rating,
+        movieId,
+        text,
+        userId,
+      },
+    });
+    console.log(review);
     // Update movie average rating
     await updateMovieRating(movieId);
 
     res.status(201).json({ review });
   } catch (error) {
-    console.error('Create review error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Create review error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
+export const getMoviereviews = async (req: Request, res: Response) => {
+  try {
+    const { movieId } = req.params;
+    const reviews = await prisma.review.findMany({
+      where: { movieId },
+      include: {
+        user: {
+          select: {
+            username: true,
+            profilePicture: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error("Get movie reviews error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 export const updateReview = async (req: AuthRequest, res: Response) => {
   try {
     const { movieId } = req.params;
@@ -61,13 +105,13 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId
-        }
-      }
+          movieId,
+        },
+      },
     });
 
     if (!existingReview) {
-      return res.status(404).json({ error: 'Review not found' });
+      return res.status(404).json({ error: "Review not found" });
     }
 
     // Update review
@@ -75,21 +119,21 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId
-        }
+          movieId,
+        },
       },
       data: {
         rating,
-        text
+        text,
       },
       include: {
         user: {
           select: {
             username: true,
-            profilePicture: true
-          }
-        }
-      }
+            profilePicture: true,
+          },
+        },
+      },
     });
 
     // Update movie average rating
@@ -97,8 +141,8 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
 
     res.json({ review });
   } catch (error) {
-    console.error('Update review error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Update review error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -112,13 +156,13 @@ export const deleteReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId
-        }
-      }
+          movieId,
+        },
+      },
     });
 
     if (!existingReview) {
-      return res.status(404).json({ error: 'Review not found' });
+      return res.status(404).json({ error: "Review not found" });
     }
 
     // Delete review
@@ -126,18 +170,18 @@ export const deleteReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId
-        }
-      }
+          movieId,
+        },
+      },
     });
 
     // Update movie average rating
     await updateMovieRating(movieId);
 
-    res.json({ message: 'Review deleted successfully' });
+    res.json({ message: "Review deleted successfully" });
   } catch (error) {
-    console.error('Delete review error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Delete review error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -153,17 +197,17 @@ export const getUserReviews = async (req: AuthRequest, res: Response) => {
             id: true,
             title: true,
             posterUrl: true,
-            releaseYear: true
-          }
-        }
+            releaseYear: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     res.json({ reviews });
   } catch (error) {
-    console.error('Get user reviews error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get user reviews error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -171,7 +215,7 @@ export const getUserReviews = async (req: AuthRequest, res: Response) => {
 async function updateMovieRating(movieId: string) {
   const reviews = await prisma.review.findMany({
     where: { movieId },
-    select: { rating: true }
+    select: { rating: true },
   });
 
   if (reviews.length > 0) {
@@ -182,8 +226,8 @@ async function updateMovieRating(movieId: string) {
       where: { id: movieId },
       data: {
         averageRating,
-        ratingsCount: reviews.length
-      }
+        ratingsCount: reviews.length,
+      },
     });
   }
 }
