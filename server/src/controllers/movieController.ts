@@ -34,7 +34,7 @@ export const featuredMovies = async (req: Request, res: Response) => {
   }
 };
 
-export const trendingMovies = async (req, res) => {
+export const trendingMovies = async (req: Request, res: Response) => {
   try {
     const data = await fetchFromTMDB<TMDBResponse>("/trending/movie/week", {
       page: "1",
@@ -57,7 +57,7 @@ export const trendingMovies = async (req, res) => {
   }
 };
 
-export const moviesList = async (req, res) => {
+export const moviesList = async (req: Request, res: Response) => {
   try {
     const {
       page = 1,
@@ -146,7 +146,7 @@ export const moviesList = async (req, res) => {
   }
 };
 
-export const moviesSearch = async (req, res) => {
+export const moviesSearch = async (req: Request, res: Response) => {
   try {
     const { q: query, page = 1, limit = 20 } = req.query;
 

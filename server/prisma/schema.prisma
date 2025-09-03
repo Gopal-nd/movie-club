@@ -68,13 +68,13 @@ model Movie {
 model Review {
   id        String   @id @default(cuid())
   userId    String
-  movieId   String
+  movieId   Int
   rating    Int
   text      String?
   createdAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id])
-  movie Movie @relation(fields: [movieId], references: [id])
+  movie Movie @relation(fields: [movieId], references: [movieId])
 
   @@unique([userId, movieId])
   @@index([movieId])
@@ -82,11 +82,11 @@ model Review {
 
 model Watchlist {
   userId  String
-  movieId String
+  movieId Int
   addedAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id])
-  movie Movie @relation(fields: [movieId], references: [id])
+  movie Movie @relation(fields: [movieId], references: [movieId])
 
   @@id([userId, movieId])
   @@index([movieId])

@@ -1,17 +1,17 @@
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { prisma } from "../config/database";
-import { AuthRequest } from "../middleware/auth";
 
-export const createReview = async (req: AuthRequest, res: Response) => {
+export const createReview = async (req: Request, res: Response) => {
   try {
-    let { rating, text, movieId } = req.body;
-    movieId = String(movieId);
+    let { rating, comment, movieId } = req.body;
+    console.log(req.body);
+    movieId = parseInt(movieId);
     if (!movieId) {
       return res.status(400).json({ error: "Movie ID is required" });
     }
     const userId = req.user!.id;
+    console.log(userId, movieId, rating, comment);
 
-    // Check if user has already reviewed this movie
     const existingReview = await prisma.review.findUnique({
       where: {
         userId_movieId: {
@@ -27,45 +27,14 @@ export const createReview = async (req: AuthRequest, res: Response) => {
         .json({ error: "You have already reviewed this movie" });
     }
 
-    const newMovie = await prisma.review.create({
-      data: {
-        userId,
-        movieId,
-        rating,
-        text,
-      },
-      include: {
-        user: {
-          select: {
-            username: true,
-            profilePicture: true,
-          },
-        },
-      },
-    });
-    let movie = await prisma.movie.findUnique({
-      where: {
-        id: movieId,
-      },
-    });
-    if (!movie) {
-      movie = await prisma.movie.create({
-        data: {
-          id: movieId,
-        },
-      });
-    }
     const review = await prisma.review.create({
       data: {
         rating,
+        text: comment,
         movieId,
-        text,
-        userId,
+        userId: userId,
       },
     });
-    console.log(review);
-    // Update movie average rating
-    await updateMovieRating(movieId);
 
     res.status(201).json({ review });
   } catch (error) {
@@ -76,8 +45,11 @@ export const createReview = async (req: AuthRequest, res: Response) => {
 export const getMoviereviews = async (req: Request, res: Response) => {
   try {
     const { movieId } = req.params;
+    if (!movieId) {
+      return res.status(400).json({ error: "Movie ID is required" });
+    }
     const reviews = await prisma.review.findMany({
-      where: { movieId },
+      where: { movieId: Number(movieId) },
       include: {
         user: {
           select: {
@@ -94,18 +66,20 @@ export const getMoviereviews = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-export const updateReview = async (req: AuthRequest, res: Response) => {
+export const updateReview = async (req: Request, res: Response) => {
   try {
     const { movieId } = req.params;
     const { rating, text } = req.body;
     const userId = req.user!.id;
-
+    if (!movieId) {
+      return res.status(400).json({ error: "Movie ID is required" });
+    }
     // Find existing review
     const existingReview = await prisma.review.findUnique({
       where: {
         userId_movieId: {
           userId,
-          movieId,
+          movieId: Number(movieId),
         },
       },
     });
@@ -119,7 +93,7 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId,
+          movieId: Number(movieId),
         },
       },
       data: {
@@ -136,9 +110,6 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Update movie average rating
-    await updateMovieRating(movieId);
-
     res.json({ review });
   } catch (error) {
     console.error("Update review error:", error);
@@ -146,7 +117,7 @@ export const updateReview = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const deleteReview = async (req: AuthRequest, res: Response) => {
+export const deleteReview = async (req: Request, res: Response) => {
   try {
     const { movieId } = req.params;
     const userId = req.user!.id;
@@ -156,7 +127,7 @@ export const deleteReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId,
+          movieId: Number(movieId),
         },
       },
     });
@@ -170,13 +141,13 @@ export const deleteReview = async (req: AuthRequest, res: Response) => {
       where: {
         userId_movieId: {
           userId,
-          movieId,
+          movieId: Number(movieId),
         },
       },
     });
 
     // Update movie average rating
-    await updateMovieRating(movieId);
+    // await updateMovieRating(movieId);
 
     res.json({ message: "Review deleted successfully" });
   } catch (error) {
@@ -185,7 +156,7 @@ export const deleteReview = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getUserReviews = async (req: AuthRequest, res: Response) => {
+export const getUserReviews = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
 
@@ -196,8 +167,8 @@ export const getUserReviews = async (req: AuthRequest, res: Response) => {
           select: {
             id: true,
             title: true,
-            posterUrl: true,
-            releaseYear: true,
+            posterPath: true,
+            releaseDate: true,
           },
         },
       },
@@ -210,24 +181,3 @@ export const getUserReviews = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-// Helper function to update movie rating
-async function updateMovieRating(movieId: string) {
-  const reviews = await prisma.review.findMany({
-    where: { movieId },
-    select: { rating: true },
-  });
-
-  if (reviews.length > 0) {
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    const averageRating = totalRating / reviews.length;
-
-    await prisma.movie.update({
-      where: { id: movieId },
-      data: {
-        averageRating,
-        ratingsCount: reviews.length,
-      },
-    });
-  }
-}
