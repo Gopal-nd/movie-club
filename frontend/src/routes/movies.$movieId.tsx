@@ -2,7 +2,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../store'
-import { moviesAPI, reviewsAPI, tmdbAPI } from '../services/api'
+import { moviesAPI, reviewsAPI, tmdbAPI, watchlistAPI } from '../services/api'
 import StarRating from '../components/StarRating'
 import Button from '../components/ui/Button'
 import {
@@ -20,13 +20,7 @@ import type { Movie, Review, Cast } from '../types'
 // Fix 1: Remove the type assertion and use proper route definition
 export const Route = createFileRoute('/movies/$movieId')({
   component: MovieDetailPage,
-  // Fix 2: Add proper parameter validation
   validateSearch: (search: Record<string, unknown>) => search,
-  // Fix 3: Optional - add loader for better data fetching
-  // loader: async ({ params }) => {
-  //   const movieId = parseInt(params.movieId)
-  //   return await moviesAPI.getMovie(movieId)
-  // }
 })
 
 function MovieDetailPage() {
@@ -53,7 +47,7 @@ function MovieDetailPage() {
     if (movieId) {
       fetchMovieDetails()
       fetchReviews()
-      fetchCast()
+      // fetchCast()
     }
   }, [movieId])
 
@@ -92,27 +86,31 @@ function MovieDetailPage() {
   }
   console.log(reviews)
 
-  const fetchCast = async () => {
-    try {
-      // This would be implemented in your backend API
-      // For now, we'll use mock data
-      setCast([])
-    } catch (err) {
-      console.error('Error fetching cast:', err)
-    }
-  }
+  // const fetchCast = async () => {
+  //   try {
+  //     // This would be implemented in your backend API
+  //     // For now, we'll use mock data
+  //     setCast([])
+  //   } catch (err) {
+  //     console.error('Error fetching cast:', err)
+  //   }
+  // }
 
-  const handleWatchlistToggle = () => {
+  const handleWatchlistToggle = async () => {
     if (!isAuthenticated) {
       // Redirect to login or show auth modal
       return
     }
 
     if (movie) {
-      if (isInWatchlist(movie.id)) {
-        removeFromWatchlist(movie.id)
+      const inWatchlist = await watchlistAPI.isInWatchlist(movie.id)
+      console.log(inWatchlist)
+      if (inWatchlist) {
+        await watchlistAPI.removeFromWatchlist(movie.id)
+        // removeFromWatchlist(movie.id)
       } else {
         addToWatchlist(movie)
+        await watchlistAPI.addToWatchlist(movie.id)
       }
     }
   }

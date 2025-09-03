@@ -3,10 +3,11 @@ import { prisma } from "../config/database";
 
 export const addToWatchlist = async (req: Request, res: Response) => {
   try {
-    let { movieId } = req.params;
+    let { movieId } = req.body;
     if (!movieId) {
       return res.status(400).json({ error: "Movie ID is required" });
     }
+    console.log(movieId);
     const userId = req.user!.id;
 
     // Check if movie is already in watchlist

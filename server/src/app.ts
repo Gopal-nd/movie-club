@@ -17,7 +17,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/movies", moviesRouter);
 app.use("/api/reviews", reviewsRouter);
 
-app.get("/api/watchlist", WatchlistRouter);
+app.use("/api/watchlist", WatchlistRouter);
 
 // app.post("/api/watchlist", async (req, res) => {
 //   try {
@@ -38,19 +38,19 @@ app.get("/api/watchlist", WatchlistRouter);
 //   }
 // });
 
-app.delete("/api/watchlist/:movieId", async (req, res) => {
-  try {
-    const { movieId } = req.params;
+// app.delete("/api/watchlist/:movieId", async (req, res) => {
+//   try {
+//     const { movieId } = req.params;
 
-    // For now, just return success
-    res.json({ message: "Removed from watchlist successfully" });
-  } catch (error) {
-    console.error("Error removing from watchlist:", error);
-    res.status(500).json({ error: "Failed to remove from watchlist" });
-  }
-});
+//     // For now, just return success
+//     res.json({ message: "Removed from watchlist successfully" });
+//   } catch (error) {
+//     console.error("Error removing from watchlist:", error);
+//     res.status(500).json({ error: "Failed to remove from watchlist" });
+//   }
+// });
 
-app.get("/api/watchlist/check/:movieId");
+// app.get("/api/watchlist/check/:movieId");
 
 // 404 handler
 app.use("*", (req, res) => {

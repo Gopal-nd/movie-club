@@ -1,5 +1,12 @@
 import axios from 'axios'
-import type { Movie, Review, User, WatchlistItem, MovieFilters, PaginatedResponse } from '../types'
+import type {
+  Movie,
+  Review,
+  User,
+  WatchlistItem,
+  MovieFilters,
+  PaginatedResponse,
+} from '../types'
 
 // Create axios instance
 const api = axios.create({
@@ -28,7 +35,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error)
-  }
+  },
 )
 
 // Response interceptor to handle auth errors
@@ -41,25 +48,31 @@ api.interceptors.response.use(
       window.location.href = '/login'
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 // Auth API
 export const authAPI = {
   login: async (email: string, password: string) => {
-    const response = await api.post<{ user: User; token: string }>('/auth/login', {
-      email,
-      password,
-    })
+    const response = await api.post<{ user: User; token: string }>(
+      '/auth/login',
+      {
+        email,
+        password,
+      },
+    )
     return response.data
   },
 
   register: async (username: string, email: string, password: string) => {
-    const response = await api.post<{ user: User; token: string }>('/auth/register', {
-      username,
-      email,
-      password,
-    })
+    const response = await api.post<{ user: User; token: string }>(
+      '/auth/register',
+      {
+        username,
+        email,
+        password,
+      },
+    )
     return response.data
   },
 
@@ -85,7 +98,9 @@ export const moviesAPI = {
     params.append('page', page.toString())
     params.append('limit', limit.toString())
 
-    const response = await api.get<PaginatedResponse<Movie>>(`/movies?${params}`)
+    const response = await api.get<PaginatedResponse<Movie>>(
+      `/movies?${params}`,
+    )
     return response.data
   },
 
@@ -105,12 +120,15 @@ export const moviesAPI = {
   },
 
   getGenres: async () => {
-    const response = await api.get<{ id: number; name: string }[]>('/movies/genres')
+    const response =
+      await api.get<{ id: number; name: string }[]>('/movies/genres')
     return response.data
   },
 
   searchMovies: async (query: string, page = 1) => {
-    const response = await api.get<PaginatedResponse<Movie>>(`/movies/search?q=${query}&page=${page}`)
+    const response = await api.get<PaginatedResponse<Movie>>(
+      `/movies/search?q=${query}&page=${page}`,
+    )
     return response.data
   },
 }
@@ -118,12 +136,16 @@ export const moviesAPI = {
 // Reviews API
 export const reviewsAPI = {
   getMovieReviews: async (movieId: number, page = 1) => {
-    const response = await api.get<PaginatedResponse<Review>>(`/reviews/movie/${movieId}?page=${page}`)
+    const response = await api.get<PaginatedResponse<Review>>(
+      `/reviews/movie/${movieId}?page=${page}`,
+    )
     return response.data
   },
 
   getUserReviews: async (page = 1) => {
-    const response = await api.get<PaginatedResponse<Review>>(`/reviews/user?page=${page}`)
+    const response = await api.get<PaginatedResponse<Review>>(
+      `/reviews/user?page=${page}`,
+    )
     return response.data
   },
 
@@ -152,12 +174,16 @@ export const reviewsAPI = {
 // Watchlist API
 export const watchlistAPI = {
   getWatchlist: async (page = 1) => {
-    const response = await api.get<PaginatedResponse<WatchlistItem>>(`/watchlist?page=${page}`)
+    const response = await api.get<PaginatedResponse<WatchlistItem>>(
+      `/watchlist?page=${page}`,
+    )
     return response.data
   },
 
   addToWatchlist: async (movieId: number) => {
-    const response = await api.post<WatchlistItem>('/watchlist', { movieId })
+    const response = await api.post<WatchlistItem>(`/watchlist/${movieId}`, {
+      movieId,
+    })
     return response.data
   },
 
@@ -166,24 +192,43 @@ export const watchlistAPI = {
   },
 
   isInWatchlist: async (movieId: number) => {
-    const response = await api.get<{ inWatchlist: boolean }>(`/watchlist/check/${movieId}`)
-    return response.data.inWatchlist
+    const response = await api.get<{ isInWatchlist: boolean }>(
+      `/watchlist/check/${movieId}`,
+    )
+    console.log(response.data)
+    return response.data.isInWatchlist
   },
 }
 
 // TMDB API for movie posters and additional details
 export const tmdbAPI = {
-  getMoviePoster: (posterPath: string, size: 'w92' | 'w154' | 'w185' | 'w342' | 'w500' | 'w780' | 'original' = 'w500') => {
+  getMoviePoster: (
+    posterPath: string,
+    size:
+      | 'w92'
+      | 'w154'
+      | 'w185'
+      | 'w342'
+      | 'w500'
+      | 'w780'
+      | 'original' = 'w500',
+  ) => {
     const baseUrl = 'https://image.tmdb.org/t/p'
     return `${baseUrl}/${size}${posterPath}`
   },
 
-  getBackdropImage: (backdropPath: string, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w1280') => {
+  getBackdropImage: (
+    backdropPath: string,
+    size: 'w300' | 'w780' | 'w1280' | 'original' = 'w1280',
+  ) => {
     const baseUrl = 'https://image.tmdb.org/t/p'
     return `${baseUrl}/${size}${backdropPath}`
   },
 
-  getProfileImage: (profilePath: string, size: 'w45' | 'w185' | 'h632' | 'original' = 'w185') => {
+  getProfileImage: (
+    profilePath: string,
+    size: 'w45' | 'w185' | 'h632' | 'original' = 'w185',
+  ) => {
     const baseUrl = 'https://image.tmdb.org/t/p'
     return `${baseUrl}/${size}${profilePath}`
   },
