@@ -50,7 +50,7 @@ export default function WatchListMovieCard({ movie }: MovieCardProps) {
         {/* Genres */}
         {movie.genres && movie.genres.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
-            {movie.genres.slice(0, 2).map((genre: any, index: number) => (
+            {movie.genres.slice(0, 2).map((_: any, index: number) => (
               <span
                 key={index}
                 className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"

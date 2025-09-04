@@ -2,11 +2,10 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../store'
 import { authAPI, reviewsAPI, watchlistAPI } from '../services/api'
-import MovieCard from '../components/MovieCard'
 import StarRating from '../components/StarRating'
 import Button from '../components/ui/Button'
-import { User, Star, Heart, Settings, LogOut, Edit, Trash2 } from 'lucide-react'
-import type { Review, WatchlistItem } from '../types'
+import { User, Star, Heart, Settings, LogOut, Edit } from 'lucide-react'
+import type { WatchlistItem } from '../types'
 import WatchListMovieCard from '@/components/watchListedCard'
 
 export const Route = createFileRoute('/profile' as any)({
@@ -14,8 +13,7 @@ export const Route = createFileRoute('/profile' as any)({
 })
 
 function ProfilePage() {
-  const { user, isAuthenticated, logout, userReviews, watchlist } =
-    useAppStore()
+  const { user, isAuthenticated, logout } = useAppStore()
   const [activeTab, setActiveTab] = useState<
     'profile' | 'reviews' | 'watchlist'
   >('profile')
@@ -49,17 +47,6 @@ function ProfilePage() {
       window.location.href = '/'
     } catch (err) {
       console.error('Error logging out:', err)
-    }
-  }
-
-  const handleDeleteReview = async (reviewId: string) => {
-    if (!confirm('Are you sure you want to delete this review?')) return
-
-    try {
-      await reviewsAPI.deleteReview(reviewId)
-      // The store will be updated automatically
-    } catch (err) {
-      console.error('Error deleting review:', err)
     }
   }
 
@@ -163,9 +150,7 @@ function ProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           {activeTab === 'profile' && <ProfileTab user={user} />}
 
-          {activeTab === 'reviews' && (
-            <ReviewsTab reviews={reviews} onDeleteReview={handleDeleteReview} />
-          )}
+          {activeTab === 'reviews' && <ReviewsTab reviews={reviews} />}
 
           {activeTab === 'watchlist' && <WatchlistTab watchlist={watchlists} />}
         </div>
@@ -178,7 +163,6 @@ function ProfilePage() {
 function ProfileTab({ user }: { user: any }) {
   const [name, setName] = useState<string>(user.username)
   const { setUser } = useAppStore()
-  const { user: loginUser } = useAppStore()
   const handleNameChange = async () => {
     if (name.length < 4) return
     await authAPI.updateUser(name)
@@ -217,13 +201,7 @@ function ProfileTab({ user }: { user: any }) {
 }
 
 // Reviews Tab Component
-function ReviewsTab({
-  reviews,
-  onDeleteReview,
-}: {
-  reviews: any
-  onDeleteReview: (id: string) => void
-}) {
+function ReviewsTab({ reviews }: { reviews: any }) {
   if (reviews.length === 0) {
     return (
       <div className="text-center py-12">

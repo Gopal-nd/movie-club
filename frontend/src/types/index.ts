@@ -80,6 +80,7 @@ export interface ApiResponse<T> {
 export interface PaginatedResponse<T> {
   reviews: T[]
   total: number
+  data: any
   page: number
   limit: number
   totalPages: number

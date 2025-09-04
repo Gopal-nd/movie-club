@@ -11,14 +11,19 @@ interface SearchBarProps {
   className?: string
 }
 
-export default function SearchBar({ onSearch, onFiltersChange, genres = [], className = '' }: SearchBarProps) {
+export default function SearchBar({
+  onSearch,
+  onFiltersChange,
+  genres = [],
+  className = '',
+}: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
     genre: '',
     year: '',
     rating: '',
-    sortBy: 'popularity'
+    sortBy: 'popularity',
   })
 
   const { filters: globalFilters, setFilters: setGlobalFilters } = useAppStore()
@@ -26,7 +31,7 @@ export default function SearchBar({ onSearch, onFiltersChange, genres = [], clas
   useEffect(() => {
     // Sync with global filters
     if (globalFilters) {
-      setFilters(prev => ({ ...prev, ...globalFilters }))
+      setFilters((prev) => ({ ...prev, ...(globalFilters as any) }))
     }
   }, [globalFilters])
 
@@ -39,7 +44,7 @@ export default function SearchBar({ onSearch, onFiltersChange, genres = [], clas
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
     onFiltersChange(newFilters)
-    setGlobalFilters(newFilters)
+    setGlobalFilters(newFilters as any)
   }
 
   const clearFilters = () => {
@@ -47,7 +52,7 @@ export default function SearchBar({ onSearch, onFiltersChange, genres = [], clas
       genre: '',
       year: '',
       rating: '',
-      sortBy: 'popularity'
+      sortBy: 'popularity',
     }
     setFilters(clearedFilters)
     onFiltersChange(clearedFilters)
@@ -55,7 +60,10 @@ export default function SearchBar({ onSearch, onFiltersChange, genres = [], clas
     setSearchQuery('')
   }
 
-  const years = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i)
+  const years = Array.from(
+    { length: 25 },
+    (_, i) => new Date().getFullYear() - i,
+  )
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -89,8 +97,11 @@ export default function SearchBar({ onSearch, onFiltersChange, genres = [], clas
           <Filter className="w-4 h-4" />
           Filters
         </Button>
-        
-        {(filters.genre || filters.year || filters.rating || filters.sortBy !== 'popularity') && (
+
+        {(filters.genre ||
+          filters.year ||
+          filters.rating ||
+          filters.sortBy !== 'popularity') && (
           <Button
             variant="ghost"
             onClick={clearFilters}

@@ -1,9 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { Heart, Star } from 'lucide-react'
-import { useAppStore } from '../store'
+import { Star } from 'lucide-react'
 import { tmdbAPI } from '../services/api'
 import type { Movie } from '../types'
-import Button from './ui/Button'
 
 interface MovieCardProps {
   movie: Movie
@@ -11,32 +9,7 @@ interface MovieCardProps {
   className?: string
 }
 
-export default function MovieCard({
-  movie,
-  showWatchlistButton = true,
-  className = '',
-}: MovieCardProps) {
-  const {
-    isInWatchlist,
-    addToWatchlist,
-    removeFromWatchlist,
-    isAuthenticated,
-  } = useAppStore()
-  const inWatchlist = isInWatchlist(movie.id)
-
-  const handleWatchlistToggle = () => {
-    if (!isAuthenticated) {
-      // Redirect to login or show auth modal
-      return
-    }
-
-    if (inWatchlist) {
-      removeFromWatchlist(movie.id)
-    } else {
-      addToWatchlist(movie)
-    }
-  }
-
+export default function MovieCard({ movie, className = '' }: MovieCardProps) {
   return (
     <div
       className={`group relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 ${className}`}

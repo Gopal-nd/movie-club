@@ -2,14 +2,12 @@ import { da } from "zod/locales";
 import { prisma } from "./database";
 
 // TMDB API configuration
-export const TMDB_API_KEY = "08c445d6706403919504ea14c3e2c2a0";
-export const TMDB_ACCESS_TOKEN =
-  "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwOGM0NDVkNjcwNjQwMzkxOTUwNGVhMTRjM2UyYzJhMCIsIm5iZiI6MTc1NjYyNTU1NS4xNDIwMDAyLCJzdWIiOiI2OGIzZmE5MzVhZmY5OTQ3ZTMzOTc5Y2IiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.uOw05vSZl9jpcxpE9mYRJ2diiVvIum3sJXhheSDpKNg";
-export const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-export const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+export const TMDB_API_KEY = process.env.TMDB_API_KEY;
+export const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
+export const TMDB_BASE_URL = process.env.TMDB_BASE_URL;
+export const TMDB_IMAGE_BASE_URL = process.env.TMDB_IMAGE_BASE_URL;
 
-export const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-jwt-key-change-in-production";
+export const JWT_SECRET = process.env.JWT_SECRET || "mykey";
 
 export interface TMDBMovie {
   id: number;
@@ -46,7 +44,7 @@ export async function fetchFromTMDB<T>(
   params: Record<string, string> = {}
 ): Promise<T> {
   const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
-  url.searchParams.append("api_key", TMDB_API_KEY);
+  url.searchParams.append("api_key", TMDB_API_KEY!);
   Object.entries(params).forEach(([key, value]) => {
     url.searchParams.append(key, value);
   });

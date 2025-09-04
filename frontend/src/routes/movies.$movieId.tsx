@@ -14,7 +14,6 @@ import {
   Users,
   MessageCircle,
   Plus,
-  Rewind,
   Trash,
 } from 'lucide-react'
 import type { Movie, Review, Cast } from '../types'
@@ -38,7 +37,7 @@ function MovieDetailPage() {
 
   const [movie, setMovie] = useState<Movie | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
-  const [cast, setCast] = useState<Cast[]>([])
+  const [cast, _] = useState<Cast[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showReviewForm, setShowReviewForm] = useState(false)
@@ -76,7 +75,7 @@ function MovieDetailPage() {
 
   const handleDeleteMovie = async (reviewsId: string) => {
     try {
-      const reviewsData = await reviewsAPI.deleteReview(reviewsId)
+      await reviewsAPI.deleteReview(reviewsId)
       setUserReview(null)
       fetchReviews()
     } catch (err) {

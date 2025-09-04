@@ -1,19 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useAppStore } from '../store'
-import { watchlistAPI } from '../services/api'
 import MovieCard from '../components/MovieCard'
 import Button from '../components/ui/Button'
-import { Heart, Trash2, Plus, Loader2 } from 'lucide-react'
-import type { WatchlistItem } from '../types'
+import { Heart, Plus } from 'lucide-react'
 
 export const Route = createFileRoute('/watchlist')({
   component: WatchlistPage,
 })
 
 function WatchlistPage() {
-  const { user, isAuthenticated, watchlist, removeFromWatchlist } =
-    useAppStore()
+  const { user, isAuthenticated, watchlist } = useAppStore()
   console.log(watchlist)
   useEffect(() => {
     if (!isAuthenticated) {
@@ -22,23 +19,6 @@ function WatchlistPage() {
       return
     }
   }, [isAuthenticated])
-
-  const handleRemoveFromWatchlist = async (movieId: number) => {
-    try {
-      await watchlistAPI.removeFromWatchlist(movieId)
-      removeFromWatchlist(movieId)
-    } catch (err) {
-      console.error('Error removing from watchlist:', err)
-    }
-  }
-
-  const handleClearWatchlist = () => {
-    if (confirm('Are you sure you want to clear your entire watchlist?')) {
-      watchlist.forEach((item) => {
-        removeFromWatchlist(item.movieId)
-      })
-    }
-  }
 
   if (!isAuthenticated || !user) {
     return (

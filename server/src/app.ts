@@ -4,9 +4,17 @@ import authRouter from "./routes/auth";
 import moviesRouter from "./routes/movies";
 import reviewsRouter from "./routes/reviews";
 import WatchlistRouter from "./routes/watchlist";
+import { rateLimit } from "express-rate-limit";
 const app = express();
 
-app.use(cors());
+const limiter = rateLimit({
+  windowMs: 5 * 1000, // 15 minutes
+  limit: 4, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+  standardHeaders: "draft-8", // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+  ipv6Subnet: 56, // Set to 60 or 64 to be less aggressive, or 52 or 48 to be more aggressive
+});
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 app.get("/health", (req, res) => {
@@ -14,45 +22,15 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/auth", authRouter);
-app.use("/api/movies", moviesRouter);
 app.use("/api/reviews", reviewsRouter);
-
 app.use("/api/watchlist", WatchlistRouter);
 
-// app.post("/api/watchlist", async (req, res) => {
-//   try {
-//     const { movieId } = req.body;
+app.use(limiter);
+app.use("/api/movies", moviesRouter);
 
-//     // For now, return a mock watchlist item
-//     const mockWatchlistItem = {
-//       id: `watchlist_${Date.now()}`,
-//       movieId: parseInt(movieId),
-//       userId: "mock_user_id",
-//       addedAt: new Date().toISOString(),
-//     };
-
-//     res.status(201).json(mockWatchlistItem);
-//   } catch (error) {
-//     console.error("Error adding to watchlist:", error);
-//     res.status(500).json({ error: "Failed to add to watchlist" });
-//   }
-// });
-
-// app.delete("/api/watchlist/:movieId", async (req, res) => {
-//   try {
-//     const { movieId } = req.params;
-
-//     // For now, just return success
-//     res.json({ message: "Removed from watchlist successfully" });
-//   } catch (error) {
-//     console.error("Error removing from watchlist:", error);
-//     res.status(500).json({ error: "Failed to remove from watchlist" });
-//   }
-// });
-
-// app.get("/api/watchlist/check/:movieId");
-
-// 404 handler
+app.get("/", (req, res) => {
+  res.send("alive");
+});
 app.use("*", (req, res) => {
   res.status(404).json({ error: "Route not found" });
 });

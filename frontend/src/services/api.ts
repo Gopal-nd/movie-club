@@ -34,6 +34,7 @@ api.interceptors.request.use(
     return config
   },
   (error) => {
+    console.log('from limits', error)
     return Promise.reject(error)
   },
 )

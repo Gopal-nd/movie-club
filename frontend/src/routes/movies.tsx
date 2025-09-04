@@ -5,8 +5,8 @@ import { moviesAPI } from '../services/api'
 import MovieCard from '../components/MovieCard'
 import SearchBar from '../components/SearchBar'
 import Button from '../components/ui/Button'
-import { Loader2, Filter, Grid, List } from 'lucide-react'
-import type { Movie, Genre, MovieFilters } from '../types'
+import { Loader2, Grid, List } from 'lucide-react'
+import type { Genre, MovieFilters } from '../types'
 
 export const Route = createFileRoute('/movies')({
   component: MoviesPage,
@@ -15,7 +15,9 @@ export const Route = createFileRoute('/movies')({
 function MoviesPage() {
   // Check if we're on a child route (movie detail page)
   const matches = useMatches()
-  const isOnChildRoute = matches.some(match => match.routeId.includes('$movieId'))
+  const isOnChildRoute = matches.some((match) =>
+    match.routeId.includes('$movieId'),
+  )
 
   // If we're on a child route, only render the outlet
   if (isOnChildRoute) {
@@ -27,7 +29,7 @@ function MoviesPage() {
 }
 
 function MoviesListPage() {
-  const { movies, setMovies, filters: globalFilters } = useAppStore()
+  const { movies, setMovies } = useAppStore()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [genres, setGenres] = useState<Genre[]>([])
@@ -57,7 +59,7 @@ function MoviesListPage() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const response = await moviesAPI.getMovies(localFilters, currentPage, 20)
       setMovies(response.data)
       setTotalPages(response.totalPages)
@@ -70,7 +72,7 @@ function MoviesListPage() {
   }
 
   const handleSearch = (query: string) => {
-    setLocalFilters(prev => ({ ...prev, searchQuery: query }))
+    setLocalFilters((prev) => ({ ...prev, searchQuery: query }))
     setCurrentPage(1)
   }
 
@@ -94,8 +96,12 @@ function MoviesListPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Browse Movies</h1>
-          <p className="text-gray-600">Discover and explore thousands of movies</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Browse Movies
+          </h1>
+          <p className="text-gray-600">
+            Discover and explore thousands of movies
+          </p>
         </div>
 
         {/* Search and Filters */}
@@ -110,17 +116,15 @@ function MoviesListPage() {
         {/* View Controls and Results */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <span className="text-gray-600">
-              {movies.length} movies found
-            </span>
-            
+            <span className="text-gray-600">{movies.length} movies found</span>
+
             {/* View Mode Toggle */}
             <div className="flex items-center bg-white rounded-lg border border-gray-200 p-1">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid' 
-                    ? 'bg-blue-100 text-blue-600' 
+                  viewMode === 'grid'
+                    ? 'bg-blue-100 text-blue-600'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -129,8 +133,8 @@ function MoviesListPage() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-blue-100 text-blue-600' 
+                  viewMode === 'list'
+                    ? 'bg-blue-100 text-blue-600'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -140,7 +144,10 @@ function MoviesListPage() {
           </div>
 
           {/* Clear Filters */}
-          {(localFilters.genre || localFilters.year || localFilters.rating || localFilters.searchQuery) && (
+          {(localFilters.genre ||
+            localFilters.year ||
+            localFilters.rating ||
+            localFilters.searchQuery) && (
             <Button variant="outline" onClick={clearAllFilters}>
               Clear All Filters
             </Button>
@@ -161,23 +168,23 @@ function MoviesListPage() {
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
             <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={fetchMovies}>
-              Try Again
-            </Button>
+            <Button onClick={fetchMovies}>Try Again</Button>
           </div>
         )}
 
         {/* Movies Grid/List */}
         {!isLoading && !error && movies.length > 0 && (
           <>
-            <div className={`${
-              viewMode === 'grid' 
-                ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'
-                : 'space-y-4'
-            }`}>
+            <div
+              className={`${
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'
+                  : 'space-y-4'
+              }`}
+            >
               {movies.map((movie) => (
-                <MovieCard 
-                  key={movie.id} 
+                <MovieCard
+                  key={movie.id}
                   movie={movie}
                   className={viewMode === 'list' ? 'flex-row aspect-auto' : ''}
                 />
@@ -194,7 +201,7 @@ function MoviesListPage() {
                 >
                   Previous
                 </Button>
-                
+
                 <div className="flex items-center gap-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const page = i + 1
@@ -210,10 +217,13 @@ function MoviesListPage() {
                         </Button>
                       )
                     }
-                    
+
                     // Show first, last, current, and neighbors
-                    if (page === 1 || page === totalPages || 
-                        (page >= currentPage - 1 && page <= currentPage + 1)) {
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
                       return (
                         <Button
                           key={page}
@@ -225,15 +235,19 @@ function MoviesListPage() {
                         </Button>
                       )
                     }
-                    
+
                     if (page === currentPage - 2 || page === currentPage + 2) {
-                      return <span key={page} className="px-2">...</span>
+                      return (
+                        <span key={page} className="px-2">
+                          ...
+                        </span>
+                      )
                     }
-                    
+
                     return null
                   })}
                 </div>
-                
+
                 <Button
                   variant="outline"
                   onClick={() => handlePageChange(currentPage + 1)}
@@ -250,21 +264,16 @@ function MoviesListPage() {
         {!isLoading && !error && movies.length === 0 && (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">🎬</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">No movies found</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              No movies found
+            </h2>
             <p className="text-gray-600 mb-4">
               Try adjusting your search criteria or filters
             </p>
-            <Button onClick={clearAllFilters}>
-              Clear Filters
-            </Button>
+            <Button onClick={clearAllFilters}>Clear Filters</Button>
           </div>
         )}
       </div>
     </div>
   )
 }
-
-
-
-
-

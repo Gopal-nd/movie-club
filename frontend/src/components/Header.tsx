@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useAppStore } from '../store'
 import Button from './ui/Button'
-import { User, Heart, LogOut, Menu, X } from 'lucide-react'
+import { LogOut, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
 export default function Header() {
@@ -99,9 +99,7 @@ export default function Header() {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm">
-                    Sign Up
-                  </Button>
+                  <Button size="sm">Sign Up</Button>
                 </Link>
               </div>
             )}
@@ -155,7 +153,12 @@ export default function Header() {
                     Profile
                   </Link>
                   <div className="px-4 py-2">
-                    <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="w-full"
+                    >
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </Button>
@@ -169,7 +172,10 @@ export default function Header() {
                       Sign In
                     </Button>
                   </Link>
-                  <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     <Button size="sm" className="w-full">
                       Sign Up
                     </Button>
