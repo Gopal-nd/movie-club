@@ -44,8 +44,8 @@ model Movie {
   status              String
   releaseDate         DateTime?
   runtime             Int?
-  budget              BigInt?
-  revenue             BigInt?
+  budget              Int?
+  revenue             Int?
   popularity          Float?
   voteAverage         Float?
   voteCount           Int?

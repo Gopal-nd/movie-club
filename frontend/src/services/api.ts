@@ -84,6 +84,10 @@ export const authAPI = {
     const response = await api.get<User>('/auth/profile')
     return response.data
   },
+  updateUser: async (name: string) => {
+    const response = await api.put<User>('/auth/user', { name })
+    return response.data
+  },
 }
 
 // Movies API
@@ -142,10 +146,8 @@ export const reviewsAPI = {
     return response.data
   },
 
-  getUserReviews: async (page = 1) => {
-    const response = await api.get<PaginatedResponse<Review>>(
-      `/reviews/user?page=${page}`,
-    )
+  getUserReviews: async () => {
+    const response = await api.get(`/reviews/user`)
     return response.data
   },
 
@@ -179,10 +181,8 @@ export const reviewsAPI = {
 
 // Watchlist API
 export const watchlistAPI = {
-  getWatchlist: async (page = 1) => {
-    const response = await api.get<PaginatedResponse<WatchlistItem>>(
-      `/waasChildtchlist?page=${page}`,
-    )
+  getWatchlist: async () => {
+    const response = await api.get(`/watchlist`)
     return response.data
   },
 
@@ -203,6 +203,11 @@ export const watchlistAPI = {
     )
     console.log(response.data)
     return response.data.isInWatchlist
+  },
+  getAllInWatchlist: async () => {
+    const response = await api.get(`/watchlist`)
+    console.log(response.data)
+    return response.data
   },
 }
 

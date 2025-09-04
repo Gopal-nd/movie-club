@@ -156,6 +156,7 @@ export const getUserReviews = async (req: Request, res: Response) => {
             title: true,
             posterPath: true,
             releaseDate: true,
+            movieId: true,
           },
         },
       },

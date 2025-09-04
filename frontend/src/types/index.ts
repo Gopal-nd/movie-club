@@ -40,6 +40,7 @@ export interface Review {
 }
 
 export interface User {
+  joinDate?: string
   id: string
   email: string
   username: string
@@ -59,6 +60,7 @@ export interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  joinDate?: string
 }
 
 export interface MovieFilters {

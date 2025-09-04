@@ -66,17 +66,6 @@ function WatchlistPage() {
                 your watchlist
               </p>
             </div>
-
-            {watchlist.length > 0 && (
-              <Button
-                variant="outline"
-                onClick={handleClearWatchlist}
-                className="text-red-600 border-red-300 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear All
-              </Button>
-            )}
           </div>
         </div>
 

@@ -10,10 +10,11 @@ import type {
 
 interface AppState extends AuthState {
   // Auth actions
+  user: AuthState['user']
   login: (user: AuthState['user'], token: string) => void
   logout: () => void
   setLoading: (loading: boolean) => void
-
+  setUser: (user: AuthState['user']) => void
   // Movies
   movies: Movie[]
   featuredMovies: Movie[]
@@ -75,6 +76,11 @@ export const useAppStore = create<AppState>()(
           watchlist: [],
           userReviews: [],
         }),
+      setUser: (user) => {
+        set({
+          user,
+        })
+      },
 
       setLoading: (loading) => set({ isLoading: loading }),
 

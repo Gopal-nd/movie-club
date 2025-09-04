@@ -1,22 +1,26 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../store'
-import { reviewsAPI, watchlistAPI } from '../services/api'
+import { authAPI, reviewsAPI, watchlistAPI } from '../services/api'
 import MovieCard from '../components/MovieCard'
 import StarRating from '../components/StarRating'
 import Button from '../components/ui/Button'
 import { User, Star, Heart, Settings, LogOut, Edit, Trash2 } from 'lucide-react'
 import type { Review, WatchlistItem } from '../types'
+import WatchListMovieCard from '@/components/watchListedCard'
 
 export const Route = createFileRoute('/profile' as any)({
   component: ProfilePage,
 })
 
 function ProfilePage() {
-  const { user, isAuthenticated, logout, userReviews, watchlist } = useAppStore()
-  const [activeTab, setActiveTab] = useState<'profile' | 'reviews' | 'watchlist'>('profile')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { user, isAuthenticated, logout, userReviews, watchlist } =
+    useAppStore()
+  const [activeTab, setActiveTab] = useState<
+    'profile' | 'reviews' | 'watchlist'
+  >('profile')
+  const [reviews, setReviews] = useState<any>()
+  const [watchlists, setWatchlists] = useState<any>()
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -25,7 +29,19 @@ function ProfilePage() {
       return
     }
   }, [isAuthenticated])
-
+  const userActivity = async () => {
+    try {
+      const watchList = await watchlistAPI.getWatchlist()
+      setWatchlists(watchList?.watchlist)
+      const review = await reviewsAPI.getUserReviews()
+      setReviews(review?.reviews)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  useEffect(() => {
+    userActivity()
+  }, [])
   const handleLogout = async () => {
     try {
       await logout()
@@ -57,7 +73,7 @@ function ProfilePage() {
       </div>
     )
   }
-
+  console.log(reviews, watchlists)
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -76,24 +92,30 @@ function ProfilePage() {
                 <User className="w-12 h-12" />
               )}
             </div>
-            
+
             {/* User Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.username}</h1>
-              <p className="text-gray-600 mb-4">{user.email}</p>
-              
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {user.username}
+              </h1>
+              <p className="">{user.email}</p>
+              <p className="mb-4">
+                Joined on :
+                {new Date(user.joinDate as string).toLocaleDateString()}
+              </p>
+
               <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-2">
                   <Star className="w-4 h-4 text-yellow-500" />
-                  <span>{userReviews.length} reviews</span>
+                  <span>{reviews?.length} reviews</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Heart className="w-4 h-4 text-red-500" />
-                  <span>{watchlist.length} in watchlist</span>
+                  <span>{watchlists?.length} in watchlist</span>
                 </div>
               </div>
             </div>
-            
+
             {/* Action Buttons */}
             <div className="flex gap-3">
               <Button variant="outline" size="sm">
@@ -139,20 +161,13 @@ function ProfilePage() {
 
         {/* Tab Content */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          {activeTab === 'profile' && (
-            <ProfileTab user={user} />
-          )}
-          
+          {activeTab === 'profile' && <ProfileTab user={user} />}
+
           {activeTab === 'reviews' && (
-            <ReviewsTab 
-              reviews={userReviews} 
-              onDeleteReview={handleDeleteReview}
-            />
+            <ReviewsTab reviews={reviews} onDeleteReview={handleDeleteReview} />
           )}
-          
-          {activeTab === 'watchlist' && (
-            <WatchlistTab watchlist={watchlist} />
-          )}
+
+          {activeTab === 'watchlist' && <WatchlistTab watchlist={watchlists} />}
         </div>
       </div>
     </div>
@@ -161,10 +176,22 @@ function ProfilePage() {
 
 // Profile Tab Component
 function ProfileTab({ user }: { user: any }) {
+  const [name, setName] = useState<string>(user.username)
+  const { setUser } = useAppStore()
+  const { user: loginUser } = useAppStore()
+  const handleNameChange = async () => {
+    if (name.length < 4) return
+    await authAPI.updateUser(name)
+    setUser({
+      ...user,
+      username: name,
+    })
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -172,27 +199,15 @@ function ProfileTab({ user }: { user: any }) {
           </label>
           <input
             type="text"
-            value={user.username}
-            disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email
-          </label>
-          <input
-            type="email"
-            value={user.email}
-            disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 "
           />
         </div>
       </div>
-      
+
       <div className="pt-4">
-        <Button>
+        <Button onClick={handleNameChange} disabled={name.length < 3}>
           <Settings className="w-4 h-4 mr-2" />
           Update Profile
         </Button>
@@ -202,13 +217,23 @@ function ProfileTab({ user }: { user: any }) {
 }
 
 // Reviews Tab Component
-function ReviewsTab({ reviews, onDeleteReview }: { reviews: Review[], onDeleteReview: (id: string) => void }) {
+function ReviewsTab({
+  reviews,
+  onDeleteReview,
+}: {
+  reviews: any
+  onDeleteReview: (id: string) => void
+}) {
   if (reviews.length === 0) {
     return (
       <div className="text-center py-12">
         <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h3>
-        <p className="text-gray-500">Start reviewing movies to see them here!</p>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          No reviews yet
+        </h3>
+        <p className="text-gray-500">
+          Start reviewing movies to see them here!
+        </p>
       </div>
     )
   }
@@ -216,10 +241,16 @@ function ReviewsTab({ reviews, onDeleteReview }: { reviews: Review[], onDeleteRe
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Your Reviews</h2>
-      
+
       <div className="space-y-4">
-        {reviews.map((review) => (
-          <div key={review.id} className="border border-gray-200 rounded-lg p-4">
+        {reviews.map((review: any) => (
+          <div
+            key={review.id}
+            className="border border-gray-200 rounded-lg p-4"
+          >
+            <div>
+              <h1>Movie Name : {review.movie.title}</h1>
+            </div>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
@@ -228,17 +259,16 @@ function ReviewsTab({ reviews, onDeleteReview }: { reviews: Review[], onDeleteRe
                     {new Date(review.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-gray-700">{review.comment}</p>
+                <p className="text-gray-700">{review.text}</p>
               </div>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDeleteReview(review.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+
+              <Link
+                to="/movies/$movieId"
+                params={{ movieId: review.movie?.movieId?.toString() }}
+                aria-label={`View details for ${review.movie.title}`}
               >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+                <Button size="sm">view</Button>
+              </Link>
             </div>
           </div>
         ))}
@@ -253,23 +283,27 @@ function WatchlistTab({ watchlist }: { watchlist: WatchlistItem[] }) {
     return (
       <div className="text-center py-12">
         <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Your watchlist is empty</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Your watchlist is empty
+        </h3>
         <p className="text-gray-500">Start adding movies to your watchlist!</p>
       </div>
     )
-  }
+  } // <MovieCard
+  //   key={item.id}
+  //   movie={item.movie}
+  //   showWatchlistButton={false}
+  // />
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Your Watchlist</h2>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {watchlist.map((item) => (
-          <MovieCard 
-            key={item.id} 
-            movie={item.movie!} 
-            showWatchlistButton={false}
-          />
+          <p>
+            <WatchListMovieCard key={item.id} movie={item.movie!} />
+          </p>
         ))}
       </div>
     </div>

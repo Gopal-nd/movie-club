@@ -84,7 +84,27 @@ export const register = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
+export const edituserdetails = async (req: Request, res: Response) => {
+  const { name } = req.body;
+  if (!req.user?.id) {
+    res.status(400).json({ error: "User ID Missing" });
+  }
+  try {
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: req.user?.id,
+      },
+      data: {
+        username: name,
+      },
+    });
+    console.log("ipdated user :", updatedUser);
+    res.status(200).json({ message: "user Details Updated" });
+  } catch (error) {
+    console.log("/auth/user", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;

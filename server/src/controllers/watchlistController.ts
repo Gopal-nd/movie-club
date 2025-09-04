@@ -94,12 +94,14 @@ export const removeFromWatchlist = async (req: Request, res: Response) => {
 
 export const getUserWatchlist = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
     const userId = req.user!.id;
 
     const watchlist = await prisma.watchlist.findMany({
       where: { userId },
       orderBy: { addedAt: "desc" },
+      include: {
+        movie: true,
+      },
     });
 
     res.json({ watchlist });
