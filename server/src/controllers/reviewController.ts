@@ -35,6 +35,7 @@ export const createReview = async (req: Request, res: Response) => {
         userId: userId,
       },
     });
+    console.log("review created", review);
 
     res.status(201).json({ review });
   } catch (error) {
@@ -60,6 +61,7 @@ export const getMoviereviews = async (req: Request, res: Response) => {
       },
       orderBy: { createdAt: "desc" },
     });
+    console.log("movie Reviews is ", reviews);
     res.status(200).json({ reviews });
   } catch (error) {
     console.error("Get movie reviews error:", error);
@@ -68,18 +70,20 @@ export const getMoviereviews = async (req: Request, res: Response) => {
 };
 export const updateReview = async (req: Request, res: Response) => {
   try {
-    const { movieId } = req.params;
-    const { rating, text } = req.body;
+    const { reviewId } = req.params;
+    const { rating, text, movieId } = req.body;
+    console.log(req.body);
     const userId = req.user!.id;
     if (!movieId) {
       return res.status(400).json({ error: "Movie ID is required" });
     }
+    console.log("movie id is :>>>", movieId);
     // Find existing review
     const existingReview = await prisma.review.findUnique({
       where: {
         userId_movieId: {
-          userId,
-          movieId: Number(movieId),
+          userId: userId,
+          movieId: movieId,
         },
       },
     });

@@ -94,7 +94,7 @@ function WatchlistPage() {
               </p>
               <div className="space-y-3">
                 <Button variant="outline">
-                  <a href="/movies">
+                  <a href="/movies" className="flex items-center gap-2">
                     <Plus className="w-4 h-4 mr-2" />
                     Browse Movies
                   </a>

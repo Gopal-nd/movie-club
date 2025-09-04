@@ -158,10 +158,16 @@ export const reviewsAPI = {
     return response.data
   },
 
-  updateReview: async (reviewId: string, rating: number, comment: string) => {
+  updateReview: async (
+    reviewId: string,
+    rating: number,
+    text: string,
+    movieId: number,
+  ) => {
     const response = await api.put<Review>(`/reviews/${reviewId}`, {
       rating,
-      comment,
+      text,
+      movieId,
     })
     return response.data
   },

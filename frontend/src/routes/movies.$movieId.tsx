@@ -14,6 +14,7 @@ import {
   Users,
   MessageCircle,
   Plus,
+  Rewind,
 } from 'lucide-react'
 import type { Movie, Review, Cast } from '../types'
 
@@ -50,7 +51,13 @@ function MovieDetailPage() {
       // fetchCast()
     }
   }, [movieId])
-
+  useEffect(() => {
+    // Fix 5: Add proper dependency and error handling
+    if (movieId) {
+      fetchReviews()
+      // fetchCast()
+    }
+  }, [])
   const fetchMovieDetails = async () => {
     try {
       setIsLoading(true)
@@ -69,11 +76,12 @@ function MovieDetailPage() {
   const fetchReviews = async () => {
     try {
       const reviewsData = await reviewsAPI.getMovieReviews(parseInt(movieId))
-      setReviews(reviewsData.data)
+      console.log(reviewsData)
+      setReviews(reviewsData.reviews)
 
       // Check if user has already reviewed this movie
       if (isAuthenticated && user) {
-        const existingReview = reviewsData.data.find(
+        const existingReview = reviewsData.reviews.find(
           (review) => review.userId === user.id,
         )
         if (existingReview) {
@@ -85,16 +93,6 @@ function MovieDetailPage() {
     }
   }
   console.log(reviews)
-
-  // const fetchCast = async () => {
-  //   try {
-  //     // This would be implemented in your backend API
-  //     // For now, we'll use mock data
-  //     setCast([])
-  //   } catch (err) {
-  //     console.error('Error fetching cast:', err)
-  //   }
-  // }
 
   const handleWatchlistToggle = async () => {
     if (!isAuthenticated) {
@@ -115,30 +113,30 @@ function MovieDetailPage() {
     }
   }
 
-  const handleReviewSubmit = async (rating: number, comment: string) => {
+  // ...existing code...
+  const handleReviewSubmit = async (rating: number, text: string) => {
     if (!movie || !isAuthenticated) return
 
     try {
       if (userReview) {
         // Update existing review
-        await reviewsAPI.updateReview(userReview.id, rating, comment)
-        setUserReview({ ...userReview, rating, comment })
+        await reviewsAPI.updateReview(
+          userReview.id,
+          rating,
+          text,
+          Number(movieId),
+        )
       } else {
         // Create new review
-        const newReview = await reviewsAPI.createReview(
-          movie.id,
-          rating,
-          comment,
-        )
-        setUserReview(newReview)
-        setReviews((prev) => [newReview, ...prev])
+        await reviewsAPI.createReview(movie.id, rating, text)
       }
       setShowReviewForm(false)
+      await fetchReviews() // <-- Refetch reviews after submit
     } catch (err) {
       console.error('Error submitting review:', err)
     }
   }
-
+  // ...existing code...
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -316,7 +314,7 @@ function MovieDetailPage() {
                 onSubmit={handleReviewSubmit}
                 onCancel={() => setShowReviewForm(false)}
                 initialRating={0}
-                initialComment=""
+                initialText=""
               />
             </div>
           )}
@@ -340,11 +338,12 @@ function MovieDetailPage() {
                   {new Date(userReview.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <p className="text-gray-700">{userReview.comment}</p>
+              <p className="text-gray-700">{userReview.text}</p>
             </div>
           )}
 
           {/* Other Reviews */}
+
           {reviews.length > 0 ? (
             <div className="space-y-4">
               {reviews
@@ -370,7 +369,7 @@ function MovieDetailPage() {
                       </div>
                       <StarRating rating={review.rating} readonly size="sm" />
                     </div>
-                    <p className="text-gray-700">{review.comment}</p>
+                    <p className="text-gray-700">{review.text}</p>
                   </div>
                 ))}
             </div>
@@ -381,19 +380,6 @@ function MovieDetailPage() {
             </div>
           )}
         </section>
-
-        {/* Similar Movies Section */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Similar Movies
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {/* This would be populated with similar movies from your API */}
-            <div className="text-center py-8 text-gray-500">
-              <p>Similar movies will appear here</p>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   )
@@ -401,20 +387,20 @@ function MovieDetailPage() {
 
 // Review Form Component
 interface ReviewFormProps {
-  onSubmit: (rating: number, comment: string) => void
+  onSubmit: (rating: number, text: string) => void
   onCancel: () => void
   initialRating: number
-  initialComment: string
+  initialText: string
 }
 
 function ReviewForm({
   onSubmit,
   onCancel,
   initialRating,
-  initialComment,
+  initialText,
 }: ReviewFormProps) {
   const [rating, setRating] = useState(initialRating)
-  const [comment, setComment] = useState(initialComment)
+  const [text, setText] = useState(initialText)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -423,7 +409,7 @@ function ReviewForm({
 
     setIsSubmitting(true)
     try {
-      await onSubmit(rating, comment)
+      onSubmit(rating, text)
     } finally {
       setIsSubmitting(false)
     }
@@ -443,8 +429,8 @@ function ReviewForm({
           Comment
         </label>
         <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
           rows={4}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Share your thoughts about this movie..."

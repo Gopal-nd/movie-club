@@ -33,7 +33,7 @@ export interface Review {
   movieId: number
   userId: string
   rating: number
-  comment: string
+  text: string
   createdAt: string
   updatedAt: string
   user?: User
@@ -76,7 +76,7 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[]
+  reviews: T[]
   total: number
   page: number
   limit: number
