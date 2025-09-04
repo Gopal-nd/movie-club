@@ -123,40 +123,23 @@ export const updateReview = async (req: Request, res: Response) => {
 
 export const deleteReview = async (req: Request, res: Response) => {
   try {
-    const { movieId } = req.params;
+    const { reviewId } = req.params;
     const userId = req.user!.id;
-
-    // Find existing review
-    const existingReview = await prisma.review.findUnique({
-      where: {
-        userId_movieId: {
-          userId,
-          movieId: Number(movieId),
-        },
-      },
-    });
-
-    if (!existingReview) {
-      return res.status(404).json({ error: "Review not found" });
+    console.log(reviewId);
+    const review = await prisma.review.findUnique({ where: { id: reviewId } });
+    if (review?.userId !== userId) {
+      return res.status(400).json({ error: "You are not Authorized" });
     }
-
-    // Delete review
     await prisma.review.delete({
       where: {
-        userId_movieId: {
-          userId,
-          movieId: Number(movieId),
-        },
+        id: reviewId,
       },
     });
 
-    // Update movie average rating
-    // await updateMovieRating(movieId);
-
-    res.json({ message: "Review deleted successfully" });
+    return res.json({ id: reviewId, message: "Review deleted successfully" });
   } catch (error) {
     console.error("Delete review error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

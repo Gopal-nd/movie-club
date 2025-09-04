@@ -20,16 +20,6 @@ router.post("/", auth, createReview);
 
 router.put("/:reviewId", auth, updateReview);
 
-router.delete("/api/reviews/:reviewId", async (req, res) => {
-  try {
-    const { reviewId } = req.params;
-
-    // For now, just return success since we don't have a reviews system implemented
-    res.json({ message: "Review deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting review:", error);
-    res.status(500).json({ error: "Failed to delete review" });
-  }
-});
+router.delete("/:reviewId", auth, deleteReview);
 
 export default router;

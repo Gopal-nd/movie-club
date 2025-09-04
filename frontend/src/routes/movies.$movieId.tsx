@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Plus,
   Rewind,
+  Trash,
 } from 'lucide-react'
 import type { Movie, Review, Cast } from '../types'
 
@@ -70,6 +71,16 @@ function MovieDetailPage() {
       console.error('Error fetching movie:', err)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDeleteMovie = async (reviewsId: string) => {
+    try {
+      const reviewsData = await reviewsAPI.deleteReview(reviewsId)
+      setUserReview(null)
+      fetchReviews()
+    } catch (err) {
+      console.error('Error fetching reviews:', err)
     }
   }
 
@@ -324,13 +335,23 @@ function MovieDetailPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-semibold text-blue-900">Your Review</h4>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowReviewForm(true)}
-                >
-                  Edit
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowReviewForm(true)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-rose-500"
+                    size="sm"
+                    onClick={() => handleDeleteMovie(userReview.id)}
+                  >
+                    <Trash />
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center gap-4 mb-2">
                 <StarRating rating={userReview.rating} readonly size="sm" />
