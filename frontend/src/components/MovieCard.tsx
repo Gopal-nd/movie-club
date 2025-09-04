@@ -60,18 +60,6 @@ export default function MovieCard({
         </div>
 
         {/* Watchlist Button */}
-        {showWatchlistButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`absolute top-2 left-2 bg-black/70 text-white hover:bg-black/90 transition-all duration-200 ${
-              inWatchlist ? 'text-red-500' : 'text-white'
-            }`}
-            onClick={handleWatchlistToggle}
-          >
-            <Heart className={`w-4 h-4 ${inWatchlist ? 'fill-current' : ''}`} />
-          </Button>
-        )}
       </div>
 
       {/* Movie Info */}

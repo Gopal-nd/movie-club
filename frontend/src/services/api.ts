@@ -175,7 +175,7 @@ export const reviewsAPI = {
 export const watchlistAPI = {
   getWatchlist: async (page = 1) => {
     const response = await api.get<PaginatedResponse<WatchlistItem>>(
-      `/watchlist?page=${page}`,
+      `/waasChildtchlist?page=${page}`,
     )
     return response.data
   },

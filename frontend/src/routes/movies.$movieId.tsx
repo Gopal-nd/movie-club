@@ -107,7 +107,7 @@ function MovieDetailPage() {
       console.log(inWatchlist)
       if (inWatchlist) {
         await watchlistAPI.removeFromWatchlist(movie.id)
-        // removeFromWatchlist(movie.id)
+        removeFromWatchlist(movie.id)
       } else {
         addToWatchlist(movie)
         await watchlistAPI.addToWatchlist(movie.id)
@@ -249,9 +249,7 @@ function MovieDetailPage() {
                     variant="outline"
                     size="lg"
                     onClick={handleWatchlistToggle}
-                    className={`border-white text-white hover:bg-white hover:text-gray-900 ${
-                      inWatchlist ? 'bg-white text-gray-900' : ''
-                    }`}
+                    className={`text-black  ${inWatchlist ? ' ' : ''}`}
                   >
                     <Heart
                       className={`w-5 h-5 mr-2 ${inWatchlist ? 'fill-current' : ''}`}
